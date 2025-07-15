@@ -120,10 +120,8 @@ Built as a final project for the **Network Programming** course at **Nepal Colle
 
 ## 🧠 Authors
 
-- 👨‍💻 Harsh Chaudhary Kalwar - `221715`
-- 👨‍💻 Pranil Poudel - `221734`
-
-📅 **Project Demo Date:** _July 16, 2025 — 7:30 AM_
+- 👨‍💻 Harsh Chaudhary Kalwar - `harsh.221715@ncit.edu.np`
+- 👨‍💻 Pranil Poudel - `pranil.221734@ncit.edu.np`
 
 ---
 
