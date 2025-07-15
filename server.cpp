@@ -5,6 +5,18 @@ SOCKET serverSocket;
 std::map<SOCKET, std::string> clients;
 std::mutex mtx;
 
+void setColor(WORD color) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+}
+
+std::string currentTime() {
+    time_t now = time(0);
+    tm* ltm = localtime(&now);
+    char buf[10];
+    sprintf(buf, "[%02d:%02d]", ltm->tm_hour, ltm->tm_min);
+    return std::string(buf);
+}
+
 void broadcast(const char* data, int length, SOCKET sender) {
     std::lock_guard<std::mutex> lock(mtx);
     for (auto& client : clients) {
@@ -23,11 +35,8 @@ void handleClient(SOCKET clientSocket) {
 
         std::string msg(buffer, bytesReceived);
 
-        if (msg == "/exit\n") {
-            break;
-        }
+        if (msg == "/exit\n") break;
 
-        // Handle commands
         if (msg.rfind("/list", 0) == 0) {
             std::string userList = "Online users:\n";
             std::lock_guard<std::mutex> lock(mtx);
@@ -37,19 +46,21 @@ void handleClient(SOCKET clientSocket) {
             continue;
         }
 
-        // Forward everything (text or file data)
         if (msg.rfind("FILE:", 0) == 0 || msg == "FILE_END\n") {
-            broadcast(buffer, bytesReceived, clientSocket);
-        } else if (msg[0] == 0x00 || msg[0] == 0xFF) {
-            // binary chunks, forward as-is
+            setColor(14); // Yellow
+            std::cout << currentTime() << " [File Transfer] " << clients[clientSocket] << ": " << msg;
+            setColor(7);
             broadcast(buffer, bytesReceived, clientSocket);
         } else {
             std::string fullMsg = clients[clientSocket] + ": " + msg;
+            setColor(15); // White
+            std::cout << currentTime() << " " << fullMsg;
+            setColor(7);
             broadcast(fullMsg.c_str(), fullMsg.length(), clientSocket);
         }
     }
 
-    std::cout << "Client disconnected.\n";
+    std::cout << "[Server] Client disconnected.\n";
     std::lock_guard<std::mutex> lock(mtx);
     clients.erase(clientSocket);
     closesocket(clientSocket);
@@ -58,7 +69,6 @@ void handleClient(SOCKET clientSocket) {
 int main() {
     WSADATA wsData;
     WSAStartup(MAKEWORD(2, 2), &wsData);
-
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     sockaddr_in serverHint = {};
@@ -69,7 +79,7 @@ int main() {
     bind(serverSocket, (sockaddr*)&serverHint, sizeof(serverHint));
     listen(serverSocket, MAX_CLIENTS);
 
-    std::cout << "Server listening on port " << PORT << "\n";
+    std::cout << "Server started on port " << PORT << "\n";
 
     while (true) {
         SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
