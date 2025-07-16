@@ -1,4 +1,4 @@
-# 💬 LAN Chat Room with File Transfer using Winsock
+harsh2: # 💬 LAN Chat Room with File Transfer using Winsock
 
 > 📡 A real-time multi-user chat and file sharing system over a local area network (LAN), built using C++ and Winsock on Windows.
 
@@ -24,7 +24,7 @@
 ```
 +-----------+       +-------------+       +-----------+
 |  Client 1 | <---> |   Server    | <---> |  Client 2 |
-+-----------+       +-------------+       +-----------+
++-----harsh2: ------+       +-------------+       +-----------+
         \                                   /
          \------------------+--------------/
                             |
@@ -62,7 +62,7 @@
 
 ## 🚀 How to Run
 
-### 🧱 Prerequisites
+### �harsh2: ��� Prerequisites
 - Windows machine
 - C++ compiler (MinGW, MSVC, Code::Blocks)
 - Winsock2 (already in Windows SDK)
@@ -104,7 +104,7 @@ g++ client.cpp -o client.exe -lws2_32
 3. Enter usernames
 4. Type messages and watch chat appear with colors + timestamps
 5. Send:
-   ```bash
+   ```bashharsh2: 
    /file sample.txt
    /list
    /exit
@@ -127,3 +127,4 @@ Built as a final project for the **Network Programming** course at **Nepal Colle
 
 ## 💥 We Didn’t Just Use Sockets — We Built Communication.
 > "From raw bytes to real messages — this chat system is ours." 💬⚡
+FILE_END

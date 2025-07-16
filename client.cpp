@@ -1,12 +1,7 @@
-// client.cpp
 #include "common.h"
 
 SOCKET clientSocket;
 std::string myName;
-
-void setColor(WORD color) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
-}
 
 std::string currentTime() {
     time_t now = time(0);
@@ -28,15 +23,12 @@ void receiveMessages() {
 
         std::string msg(buffer, bytesReceived);
 
-        // Handle file reception
         if (msg.rfind("FILE:", 0) == 0) {
             std::string filename = msg.substr(5);
             filename.erase(filename.find_last_not_of(" \n\r\t") + 1);
             outFile.open(filename, std::ios::binary);
             receivingFile = true;
-            setColor(14); // Yellow
             std::cout << currentTime() << " Receiving file: " << filename << "\n";
-            setColor(7);
             continue;
         }
 
@@ -44,9 +36,7 @@ void receiveMessages() {
             receivingFile = false;
             if (outFile.is_open()) {
                 outFile.close();
-                setColor(10); // Green
                 std::cout << currentTime() << " File received successfully!\n";
-                setColor(7);
             }
             continue;
         }
@@ -54,16 +44,12 @@ void receiveMessages() {
         if (receivingFile && outFile.is_open()) {
             outFile.write(buffer, bytesReceived);
         } else {
-            // Detect if this message is from self
             if (msg.rfind(myName + ": ", 0) == 0) {
-                std::string sentText = msg.substr(myName.length() + 2);
-                setColor(11); // Cyan
-                std::cout << currentTime() << " You: " << sentText;
+                std::string body = msg.substr(myName.length() + 2);
+                std::cout << currentTime() << " You: " << body;
             } else {
-                setColor(15); // White
                 std::cout << currentTime() << " " << msg;
             }
-            setColor(7);
         }
     }
 }
@@ -71,9 +57,7 @@ void receiveMessages() {
 void sendFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
-        setColor(12);
         std::cout << "File not found: " << filename << "\n";
-        setColor(7);
         return;
     }
 
@@ -87,26 +71,37 @@ void sendFile(const std::string& filename) {
         send(clientSocket, buffer, bytes, 0);
     }
 
-    std::string endMsg = "FILE_END\n";
-    send(clientSocket, endMsg.c_str(), endMsg.length(), 0);
+    std::string end = "FILE_END\n";
+    send(clientSocket, end.c_str(), end.length(), 0);
     std::cout << "File sent successfully!\n";
     file.close();
 }
 
 int main() {
+#ifdef _WIN32
     WSADATA wsData;
     WSAStartup(MAKEWORD(2, 2), &wsData);
+#endif
+
     clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     sockaddr_in serverHint = {};
     serverHint.sin_family = AF_INET;
     serverHint.sin_port = htons(PORT);
-    serverHint.sin_addr.s_addr = inet_addr("127.0.0.1");
+    
+    #ifdef _WIN32
+        serverHint.sin_addr.s_addr = inet_addr("127.0.0.1");
+    #else
+        inet_pton(AF_INET, "127.0.0.1", &serverHint.sin_addr);
+    #endif
+
+
     connect(clientSocket, (sockaddr*)&serverHint, sizeof(serverHint));
 
     char buffer[BUFFER_SIZE];
     recv(clientSocket, buffer, BUFFER_SIZE, 0);
     std::cout << buffer;
+
     std::getline(std::cin, myName);
     send(clientSocket, myName.c_str(), myName.size(), 0);
 
@@ -128,7 +123,9 @@ int main() {
         }
     }
 
-    closesocket(clientSocket);
+    CLOSESOCKET(clientSocket);
+#ifdef _WIN32
     WSACleanup();
+#endif
     return 0;
 }

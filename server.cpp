@@ -1,13 +1,8 @@
-// server.cpp
 #include "common.h"
 
 SOCKET serverSocket;
 std::map<SOCKET, std::string> clients;
 std::mutex mtx;
-
-void setColor(WORD color) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
-}
 
 std::string currentTime() {
     time_t now = time(0);
@@ -38,37 +33,36 @@ void handleClient(SOCKET clientSocket) {
         if (msg == "/exit\n") break;
 
         if (msg.rfind("/list", 0) == 0) {
-            std::string userList = "Online users:\n";
+            std::string list = "Online users:\n";
             std::lock_guard<std::mutex> lock(mtx);
             for (auto& user : clients)
-                userList += user.second + "\n";
-            send(clientSocket, userList.c_str(), userList.length(), 0);
+                list += user.second + "\n";
+            send(clientSocket, list.c_str(), list.length(), 0);
             continue;
         }
 
         if (msg.rfind("FILE:", 0) == 0 || msg == "FILE_END\n") {
-            setColor(14); // Yellow
-            std::cout << currentTime() << " [File Transfer] " << clients[clientSocket] << ": " << msg;
-            setColor(7);
+            std::cout << currentTime() << " [File] " << clients[clientSocket] << ": " << msg;
             broadcast(buffer, bytesReceived, clientSocket);
         } else {
-            std::string fullMsg = clients[clientSocket] + ": " + msg;
-            setColor(15); // White
-            std::cout << currentTime() << " " << fullMsg;
-            setColor(7);
-            broadcast(fullMsg.c_str(), fullMsg.length(), clientSocket);
+            std::string full = clients[clientSocket] + ": " + msg;
+            std::cout << currentTime() << " " << full;
+            broadcast(full.c_str(), full.length(), clientSocket);
         }
     }
 
     std::cout << "[Server] Client disconnected.\n";
     std::lock_guard<std::mutex> lock(mtx);
     clients.erase(clientSocket);
-    closesocket(clientSocket);
+    CLOSESOCKET(clientSocket);
 }
 
 int main() {
+#ifdef _WIN32
     WSADATA wsData;
     WSAStartup(MAKEWORD(2, 2), &wsData);
+#endif
+
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     sockaddr_in serverHint = {};
@@ -79,7 +73,7 @@ int main() {
     bind(serverSocket, (sockaddr*)&serverHint, sizeof(serverHint));
     listen(serverSocket, MAX_CLIENTS);
 
-    std::cout << "Server started on port " << PORT << "\n";
+    std::cout << "Server listening on port " << PORT << "\n";
 
     while (true) {
         SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
@@ -94,7 +88,9 @@ int main() {
         std::thread(handleClient, clientSocket).detach();
     }
 
-    closesocket(serverSocket);
+    CLOSESOCKET(serverSocket);
+#ifdef _WIN32
     WSACleanup();
+#endif
     return 0;
 }
