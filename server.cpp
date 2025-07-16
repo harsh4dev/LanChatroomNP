@@ -23,6 +23,18 @@ void broadcast(const char* data, int length, SOCKET sender) {
 
 void handleClient(SOCKET clientSocket) {
     char buffer[BUFFER_SIZE];
+
+    // Get the username first
+    char nameBuffer[BUFFER_SIZE];
+    recv(clientSocket, nameBuffer, BUFFER_SIZE, 0);
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        clients[clientSocket] = std::string(nameBuffer);
+    }
+
+    std::cout << currentTime() << " User connected: " << clients[clientSocket] << "\n";
+
     while (true) {
         memset(buffer, 0, BUFFER_SIZE);
         int bytesReceived = recv(clientSocket, buffer, BUFFER_SIZE, 0);
@@ -51,7 +63,9 @@ void handleClient(SOCKET clientSocket) {
         }
     }
 
-    std::cout << "[Server] Client disconnected.\n";
+    // Log disconnection
+    std::cout << currentTime() << " User disconnected: " << clients[clientSocket] << "\n";
+
     std::lock_guard<std::mutex> lock(mtx);
     clients.erase(clientSocket);
     CLOSESOCKET(clientSocket);
@@ -78,13 +92,6 @@ int main() {
     while (true) {
         SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
         send(clientSocket, "Enter your username: ", 22, 0);
-
-        char nameBuffer[BUFFER_SIZE];
-        recv(clientSocket, nameBuffer, BUFFER_SIZE, 0);
-
-        std::lock_guard<std::mutex> lock(mtx);
-        clients[clientSocket] = std::string(nameBuffer);
-
         std::thread(handleClient, clientSocket).detach();
     }
 

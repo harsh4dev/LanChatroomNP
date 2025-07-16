@@ -1,4 +1,9 @@
 #include "common.h"
+#include <sys/stat.h>  // for mkdir
+#include <sys/types.h>
+#ifdef _WIN32
+  #include <direct.h>  // for _mkdir
+#endif
 
 SOCKET clientSocket;
 std::string myName;
@@ -11,10 +16,17 @@ std::string currentTime() {
     return std::string(buf);
 }
 
+void logToFile(const std::string& text) {
+    std::ofstream log("chatlog.txt", std::ios::app);
+    log << currentTime() << " " << text;
+    log.close();
+}
+
 void receiveMessages() {
     char buffer[BUFFER_SIZE];
     bool receivingFile = false;
     std::ofstream outFile;
+    std::string filePath;
 
     while (true) {
         memset(buffer, 0, BUFFER_SIZE);
@@ -23,11 +35,22 @@ void receiveMessages() {
 
         std::string msg(buffer, bytesReceived);
 
+        // File handling
         if (msg.rfind("FILE:", 0) == 0) {
             std::string filename = msg.substr(5);
             filename.erase(filename.find_last_not_of(" \n\r\t") + 1);
-            outFile.open(filename, std::ios::binary);
+
+            // Create received folder if it doesn't exist
+#ifdef _WIN32
+            _mkdir("received");
+#else
+            mkdir("received", 0777);
+#endif
+
+            filePath = "received/" + filename;
+            outFile.open(filePath, std::ios::binary);
             receivingFile = true;
+
             std::cout << currentTime() << " Receiving file: " << filename << "\n";
             continue;
         }
@@ -36,7 +59,7 @@ void receiveMessages() {
             receivingFile = false;
             if (outFile.is_open()) {
                 outFile.close();
-                std::cout << currentTime() << " File received successfully!\n";
+                std::cout << currentTime() << " File received and saved to " << filePath << "\n";
             }
             continue;
         }
@@ -44,12 +67,15 @@ void receiveMessages() {
         if (receivingFile && outFile.is_open()) {
             outFile.write(buffer, bytesReceived);
         } else {
+            std::string display;
             if (msg.rfind(myName + ": ", 0) == 0) {
                 std::string body = msg.substr(myName.length() + 2);
-                std::cout << currentTime() << " You: " << body;
+                display = currentTime() + " You: " + body;
             } else {
-                std::cout << currentTime() << " " << msg;
+                display = currentTime() + " " + msg;
             }
+            std::cout << display;
+            logToFile(display);
         }
     }
 }
@@ -88,13 +114,11 @@ int main() {
     sockaddr_in serverHint = {};
     serverHint.sin_family = AF_INET;
     serverHint.sin_port = htons(PORT);
-    
-    #ifdef _WIN32
-        serverHint.sin_addr.s_addr = inet_addr("127.0.0.1");
-    #else
-        inet_pton(AF_INET, "127.0.0.1", &serverHint.sin_addr);
-    #endif
-
+#ifdef _WIN32
+    serverHint.sin_addr.s_addr = inet_addr("127.0.0.1");
+#else
+    inet_pton(AF_INET, "127.0.0.1", &serverHint.sin_addr);
+#endif
 
     connect(clientSocket, (sockaddr*)&serverHint, sizeof(serverHint));
 
@@ -117,6 +141,13 @@ int main() {
             std::string filename = input.substr(6);
             filename.erase(filename.find_last_not_of(" \n\r\t") + 1);
             sendFile(filename);
+        } else if (input == "/help\n") {
+            std::cout <<
+                "\nAvailable Commands:\n"
+                "  /file <filename> → send file\n"
+                "  /list            → show online users\n"
+                "  /exit            → leave the chat\n"
+                "  /help            → show this help\n\n";
         } else {
             send(clientSocket, input.c_str(), input.size(), 0);
             if (input == "/exit\n") break;
