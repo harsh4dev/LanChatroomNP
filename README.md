@@ -146,10 +146,10 @@ Each client will:
 
 ## ✅ Status
 
-✅ Final version tested and verified on both Windows and macOS 
-✅ All requirements met and enhancements added
-✅ Demo screenshots provided for clarity
-✅ Contributors listed and acknowledged
+- Final version tested and verified on both Windows and macOS 
+- All requirements met and enhancements added
+- Demo screenshots provided for clarity
+- Contributors listed and acknowledged
 ---
 
 ## 📝 License
@@ -162,8 +162,7 @@ This project was created as a part of the Network Programming course at Nepal Co
 If you have any questions or need further clarification, please don't hesitate to contact us at `harshchy143@gmail.com`
 ---
 ## 📚 Version
-This is the final version of the project. We have tested and verified it on both Windows and macOS
-platforms.
+This is the final version of the project. We have tested and verified it on both Windows and macOS platforms.
 ---
 
 ## 📚 Reference
