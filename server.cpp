@@ -8,7 +8,7 @@ std::string currentTime() {
     time_t now = time(0);
     tm* ltm = localtime(&now);
     char buf[10];
-    sprintf(buf, "[%02d:%02d]", ltm->tm_hour, ltm->tm_min);
+    snprintf(buf, sizeof(buf), "[%02d:%02d]", ltm->tm_hour, ltm->tm_min);
     return std::string(buf);
 }
 
@@ -92,7 +92,8 @@ int main() {
     while (true) {
         SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
         send(clientSocket, "Enter your username: ", 22, 0);
-        std::thread(handleClient, clientSocket).detach();
+        std::thread t([clientSocket]() { handleClient(clientSocket); });
+        t.detach();
     }
 
     CLOSESOCKET(serverSocket);

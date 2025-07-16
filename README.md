@@ -1,130 +1,175 @@
-harsh2: # 💬 LAN Chat Room with File Transfer using Winsock
+# 💬 LAN Chat Room with File Transfer
 
-> 📡 A real-time multi-user chat and file sharing system over a local area network (LAN), built using C++ and Winsock on Windows.
-
----
-
-## 🛠️ Features
-
-- ✅ **Multi-User Chat:** Real-time message exchange over LAN
-- 📂 **File Transfer Support:** Send and receive files via server relay
-- 💬 **Simple Commands:** `/file <filename>`, `/list`, `/exit`
-- 🧵 **Multi-Threaded Server:** Handles multiple clients simultaneously
-- 🎨 **Colored Console Output:** Sender, receiver, and events are color-coded
-- ⏱️ **Message Timestamps:** Every message has a [HH:MM] prefix
-- 🙋‍♂️ **You-style Echo:** Sender sees their own messages as `You: message`
-- 🖥️ **Console-Based Interface:** Clean, no-GUI terminal chat
+> Cross-platform (Windows & macOS) multi-client chat system with file transfer, built using C++ sockets.
 
 ---
 
-## 🖼️ Architecture
+## ✨ Features
 
-**Client-Server Model using TCP Sockets (Winsock2):**
+- ✅ Real-time LAN chat for multiple users
+- ✅ File transfer between clients
+- ✅ Server sees all messages & file activity
+- ✅ Colored, timestamped console messages
+- ✅ Chat log saved to `chatlog.txt`
+- ✅ Auto-save received files in `received/` folder
+- ✅ `/help` command for ease of use
+- ✅ Works on both Windows and macOS (cross-platform)
+
+---
+
+## 🏗 Architecture
 
 ```
 +-----------+       +-------------+       +-----------+
-|  Client 1 | <---> |   Server    | <---> |  Client 2 |
-+-----harsh2: ------+       +-------------+       +-----------+
+|  Client A | <---> |   Server    | <---> |  Client B |
++-----------+       +-------------+       +-----------+
         \                                   /
-         \------------------+--------------/
-                            |
-                         File Relay
+         \--------- File Relay ------------/
 ```
+
+- **Server**: Listens on a TCP socket, handles each client in a new thread
+- **Client**: Connects to server, can send/receive messages and files
 
 ---
 
-## ⚙️ Tech Stack
+## ⚙ Technologies Used
 
-| Component         | Technology     |
-|------------------|----------------|
-| Language          | C++            |
-| Network API       | Winsock2       |
-| Platform          | Windows 11     |
-| UI                | Console-Based  |
-| Compiler/IDE      | VS Code / Code::Blocks |
-| Protocol          | TCP/IP         |
-| Version Control   | Git            |
-
----
-
-## 📂 Project Structure
-
-```
-/LANChatRoom/
-├── client.cpp       # Chat + file client (with color, timestamps, etc.)
-├── server.cpp       # Multi-threaded server (logs all messages)
-├── common.h         # Shared constants & headers
-├── README.md        # This file
-└── sample.txt       # Sample file to test transfer
-```
+| Component   | Tech            |
+|-------------|-----------------|
+| Language    | C++             |
+| Sockets     | Winsock2 (Windows), BSD (macOS) |
+| Compiler    | g++ / MinGW / clang++ |
+| IDE         | VS Code / Code::Blocks |
+| OS Support  | Windows 10/11, macOS Ventura+ |
+| Threads     | std::thread     |
+| Filesystem  | fstream, mkdir  |
 
 ---
 
-## 🚀 How to Run
+## 🖥 Installation & Build
 
-### �harsh2: ��� Prerequisites
-- Windows machine
-- C++ compiler (MinGW, MSVC, Code::Blocks)
-- Winsock2 (already in Windows SDK)
-
-### ✅ Compile
-
-**VS Code or Terminal:**
+### Windows:
 ```bash
 g++ server.cpp -o server.exe -lws2_32
 g++ client.cpp -o client.exe -lws2_32
 ```
 
-**Code::Blocks:**
-- Add `ws2_32` to linker settings
-- Add all .cpp and .h files to project
+### macOS:
+```bash
+g++ server.cpp -o server -pthread -std=c++11
+g++ client.cpp -o client -pthread -std=c++11
+```
 
-### ✅ Run
+---
 
-1. Run `server.exe` in one terminal
-2. Run `client.exe` in 2+ terminals
-3. Enter usernames and start chatting!
+## ▶️ Usage
+
+### Run the server:
+```bash
+./server   # or server.exe
+```
+
+### Run one or more clients:
+```bash
+./client   # or client.exe
+```
+
+Each client will:
+- Prompt for username
+- Join chat room
+- Be able to send messages, send files, and use commands
 
 ---
 
 ## 💬 Commands
 
-| Command              | Description                       |
-|----------------------|-----------------------------------|
-| `/file filename.txt` | Send a file to other users        |
-| `/list`              | List currently connected users    |
-| `/exit`              | Disconnect from server            |
+| Command            | Description                          |
+|--------------------|--------------------------------------|
+| `/file <filename>` | Sends a file to all other clients    |
+| `/list`            | Lists all online users               |
+| `/help`            | Shows available commands             |
+| `/exit`            | Disconnects from the server          |
 
 ---
 
-## 🧪 Demo Scenario
+## 📂 File Transfer Details
 
-1. Start `server.exe`
-2. Run `client.exe` in two terminals
-3. Enter usernames
-4. Type messages and watch chat appear with colors + timestamps
-5. Send:
-   ```bashharsh2: 
-   /file sample.txt
-   /list
-   /exit
-   ```
+- Client sends header: `FILE:<filename>
+`
+- File data is sent in binary chunks
+- `FILE_END
+` is sent after transfer completes
+- Receiving clients:
+  - Save file in `received/` folder
+  - Display confirmation message
 
 ---
 
-## 🙏 Acknowledgment
+## 🛠 Enhancements Added
 
-Built as a final project for the **Network Programming** course at **Nepal College of Information Technology**, under the guidance of **Mr. Madan Kadariya**.
-
----
-
-## 🧠 Authors
-
-- 👨‍💻 Harsh Chaudhary Kalwar - `harsh.221715@ncit.edu.np`
-- 👨‍💻 Pranil Poudel - `pranil.221734@ncit.edu.np`
+- 📁 `received/` auto-save folder creation
+- 📝 All chat messages saved to `chatlog.txt`
+- 💡 `/help` command for user-friendly CLI
+- 🟩 "You:" message formatting for sender
+- ⏱ Timestamp prefix: `[HH:MM]`
+- 🟦 Server shows username when clients connect/disconnect
 
 ---
 
-## 💥 We Didn’t Just Use Sockets — We Built Communication.
-> "From raw bytes to real messages — this chat system is ours." 💬⚡
-FILE_END
+## 📸 Demo Screenshots
+
+### ✅ Server showing connection logs
+![Server Side](outputs/server.png)
+
+### ✅ Client chatting with timestamp
+![Client Side](outputs/user1.png)
+
+### ✅ Client chatting with timestamp
+![Client Side](outputs/user2.png)
+
+### ✅ Client chatting with timestamp
+![Client Side](outputs/user3.png)
+
+
+---
+
+## 👥 Contributors
+
+- 👨‍💻 Harsh Chaudhary Kalwar (`221715`)
+- 👨‍💻 Pranil Poudel (`221734`)
+
+🎓 Course: **Network Programming**  
+📚 College: **Nepal College of Information Technology**  
+👨‍🏫 Instructor: **Mr. Madan Kadariya**
+
+---
+
+## ✅ Status
+
+✅ Final version tested and verified on both Windows and macOS 
+✅ All requirements met and enhancements added
+✅ Demo screenshots provided for clarity
+✅ Contributors listed and acknowledged
+---
+
+## 📝 License
+This project is licensed under the MIT License - see the `LICENSE` file for details.
+---
+## 📚 Acknowledgement
+This project was created as a part of the Network Programming course at Nepal College of Information Technology. We would like to thank our instructor, Mr. Madan Kadariya, for his guidance and support throughout the course. We would also like to thank our peers for their collaboration and feedback.
+---
+## 📚 Contact
+If you have any questions or need further clarification, please don't hesitate to contact us at `harshchy143@gmail.com`
+---
+## 📚 Version
+This is the final version of the project. We have tested and verified it on both Windows and macOS
+platforms.
+---
+
+## 📚 Reference
+- [1] https://www.geeksforgeeks.org/socket-programming-cc/
+- [2] https://www.tutorialspoint.com/cprogramming/c_networking.htm
+- [3] https://www.geeksforgeeks.org/socket-programming-in-cc-for-client-server-model/
+
+---
+
